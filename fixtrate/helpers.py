@@ -170,7 +170,7 @@ def make_logon_msg(
     msg.append_pair(TAG.EncryptMethod, encrypt_method)
     msg.append_pair(TAG.HeartBtInt, hb_int)
     if reset:
-        msg.append_pair(TAG.MsgSeqNum, 1)
+        msg.append_pair(TAG.MsgSeqNum, 1, header=True)
         msg.append_pair(TAG.ResetSeqNumFlag, 'Y')
     return msg
 

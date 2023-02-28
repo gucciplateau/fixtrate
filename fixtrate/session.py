@@ -245,11 +245,11 @@ class FixSession:
     async def _set_header(self, msg: "FixMessage") -> None:
         if msg.get_raw(TAGS.MsgSeqNum) is None:
             seq_num = await self._store.get_local() + 1
-            msg.append_pair(TAGS.MsgSeqNum, seq_num)
+            msg.append_pair(TAGS.MsgSeqNum, seq_num, header=True)
 
-        msg.append_pair(TAGS.BeginString, self.config.version)
-        msg.append_pair(TAGS.SenderCompID, self.config.sender)
-        msg.append_pair(TAGS.TargetCompID, self.config.target)
+        msg.append_pair(TAGS.BeginString, self.config.version, header=True)
+        msg.append_pair(TAGS.SenderCompID, self.config.sender, header=True)
+        msg.append_pair(TAGS.TargetCompID, self.config.target, header=True)
 
         send_time = msg.get_raw(TAGS.SendingTime)
         if send_time is None:
