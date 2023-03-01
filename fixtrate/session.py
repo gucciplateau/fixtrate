@@ -139,7 +139,7 @@ class FixSession:
     async def logon(self) -> None:
         """ Logon to a FIX Session. Sends a Logon<A> message to peer.
         """
-        login_msg = helpers.make_logon_msg(hb_int=self._hb_int)
+        login_msg = helpers.make_logon_msg(hb_int=self._hb_int, reset=True)
         await self.send(login_msg)
 
     async def test(self, test_req_id: t.Optional[str] = None) -> None:
@@ -243,11 +243,12 @@ class FixSession:
                 self.on_send(msg)
 
     async def _set_header(self, msg: "FixMessage") -> None:
+
+        msg.append_pair(TAGS.BeginString, self.config.version, header=True)
         if msg.get_raw(TAGS.MsgSeqNum) is None:
             seq_num = await self._store.get_local() + 1
             msg.append_pair(TAGS.MsgSeqNum, seq_num, header=True)
 
-        msg.append_pair(TAGS.BeginString, self.config.version, header=True)
         msg.append_pair(TAGS.SenderCompID, self.config.sender, header=True)
         msg.append_pair(TAGS.TargetCompID, self.config.target, header=True)
 
