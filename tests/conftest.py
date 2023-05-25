@@ -5,7 +5,7 @@ import logging
 import uuid
 import typing as t
 
-import aioredis  # type: ignore
+from redis.asyncio import Redis  # type: ignore
 
 import pytest  # type: ignore
 import fixtrate
@@ -76,12 +76,10 @@ class MockFixServer:
 
 
 async def _clear_redis(url: str):
-    redis = await aioredis.create_redis(url)
-    keys = await redis.keys("seatrade-test*")
-    if len(keys) > 0:
-        await redis.delete(*keys)
-    redis.close()
-    await redis.wait_closed()
+    async with Redis.from_url(url) as redis:
+        keys = await redis.keys("seatrade-test*")
+        if len(keys) > 0:
+            await redis.delete(*keys)
 
 
 @pytest.fixture
