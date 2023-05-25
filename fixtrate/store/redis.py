@@ -2,7 +2,7 @@ import time
 import uuid
 import typing as t
 
-import aioredis  # type: ignore
+from redis.asyncio import Redis  # type: ignore
 
 from fixtrate.message import FixMessage
 from .base import FixStore
@@ -75,10 +75,10 @@ class RedisStore(FixStore):
     def __init__(
         self,
         config: "FixSessionConfig",
-        redis: aioredis.Redis,
+        redis: Redis,
         prefix: t.Optional[str] = None
     ) -> None:
-        self.redis: aioredis.Redis = redis
+        self.redis: Redis = redis
         self.prefix = prefix
         super().__init__(config)
 
@@ -117,7 +117,7 @@ class RedisStore(FixStore):
 
     async def incr_remote(self) -> int:
         key = self._make_key('seq_num_remote')
-        seq_num = await self.redis.eval(remote_incr, keys=[key])
+        seq_num = await self.redis.register_script(remote_incr)(keys=[key])
         return int(seq_num)
 
     async def set_local(self, new_seq_num: int) -> None:
@@ -133,16 +133,16 @@ class RedisStore(FixStore):
             uid = str(uuid.uuid4())
 
             key = self._make_key('messages')
-            await self.redis.hset(key, uid, msg.encode())
+            await self.redis.hset(key, uid, str(msg.encode()))
 
             store_time = time.time()
             key = self._make_key('messages_by_time')
-            await self.redis.zadd(key, store_time, uid)
+            await self.redis.zadd(key, {uid: store_time})
 
             is_sent = msg.get_raw(49) == self.config.sender
             index = 'messages_%s' % ("sent" if is_sent else "received")
             key = self._make_key(index)
-            await self.redis.zadd(key, msg.seq_num, uid)
+            await self.redis.zadd(key, {uid: msg.seq_num})
 
     async def get_msgs(
         self,
@@ -161,8 +161,7 @@ class RedisStore(FixStore):
         id_key = self._make_key(f"messages_{index}")
         msg_key = self._make_key("messages")
 
-        raw_msgs = await self.redis.eval(
-            _get_msgs,
+        raw_msgs = await self.redis.register_script(_get_msgs)(
             keys=[id_key, msg_key],
             args=[sort, _str_bound(min), _str_bound(max), str(limit)],
         )
@@ -189,5 +188,4 @@ class RedisStore(FixStore):
 
     async def close(self) -> None:
         if self.redis is not None:
-            self.redis.close()
-            await self.redis.wait_closed()
+            await self.redis.close()

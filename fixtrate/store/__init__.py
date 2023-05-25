@@ -1,7 +1,7 @@
 import typing as t
 from urllib.parse import urlparse, unquote, parse_qs
 
-import aioredis  # type: ignore
+from redis.asyncio import Redis  # type: ignore
 
 from .base import FixStore # NOQA
 from .inmemory import MemoryStore # NOQA
@@ -37,7 +37,7 @@ async def create_store(config: "FixSessionConfig", dsn: str) -> FixStore:
             prefix = None
 
         redis_url = f"redis://{host}:{port}"
-        redis = await aioredis.create_redis_pool(redis_url, maxsize=5)
+        redis = Redis.from_url(redis_url, max_connections=5)
         store = RedisStore(config, redis, prefix)
     else:
         store = MemoryStore(config)

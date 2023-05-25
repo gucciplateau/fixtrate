@@ -20,7 +20,7 @@ packages = [
 python = "^3.6"
 aenum = ">=2.1.2"
 async-timeout = ">=2.0"
-aioredis = ">=1.1.0"
+redis = ">=4.2.0"  # async support
 simplefix = ">=1.0.12"
 untangle = ">=1.1.1"
 python-dateutil = ">=2.6.1"
@@ -29,10 +29,10 @@ sortedcontainers = "^2.2.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
-pytest = "==3.6.3"
-pytest-asyncio = "==0.8.0"
-sphinx = "==1.7.9"
-sphinxcontrib-asyncio = "==0.2.0"
+pytest = "*"
+pytest-asyncio = "*"
+sphinx = "*"
+sphinxcontrib-asyncio = "*"
 
 [tool.poetry.scripts]
 fixtrate = "fixtrate.cli.main:run"
